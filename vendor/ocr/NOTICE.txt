@@ -1,0 +1,11 @@
+文字の読み取りの部品（間取り図を選んだときだけ読み込む。この公開先から読み、外部の CDN は使わない）
+
+- tesseract.min.js・worker.min.js：tesseract.js 7.0.0（Apache License 2.0。全文は LICENSE-tesseract.txt）。
+  中に含まれる小さな部品の表示は THIRD-PARTY-in-js.txt（regenerator-runtime・buffer・ieee754・zlib.js。MIT / BSD-3-Clause）。
+- tesseract-core-lstm.js / .wasm、tesseract-core-simd-lstm.js / .wasm：tesseract.js-core 7.0.0（Tesseract OCR を WebAssembly にした物。Apache License 2.0）。
+  SIMD が使える端末は simd 版、使えない端末は simd なしの版を読む（どちらか1つだけ）。
+  wasm には Leptonica・libjpeg（IJG）・giflib・libpng・libtiff・libwebp・zlib・openlibm が組み込まれている。それぞれの著作権の表示と条件の全文は THIRD-PARTY-in-wasm.txt。
+  This software is based in part on the work of the Independent JPEG Group.
+- lang/jpn.traineddata.gz・lang/eng.traineddata.gz：@tesseract.js-data/jpn・eng 1.0.0 の 4.0.0_best_int
+  （Tesseract の学習データ tessdata_best を整数にした物。Apache License 2.0）。gz のまま置き、読み取りの部品が端末の中で展開する。
+- 取得元：npm の公開の登録先（registry.npmjs.org）。中身は変えていない。
