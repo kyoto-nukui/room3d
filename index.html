@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>部屋の寸法3D（試作）</title>
+<link rel="stylesheet" href="style.css?v=fdc0e5eb">
+</head>
+<body>
+<div id="notice">目安です。発注前に必ず測ってください</div>
+<div id="ver"><button type="button" id="ver-btn" data-v="fdc0e5eb" data-day="2026-10-29">ver 1.2.42</button></div>
+<main id="wizard">
+<div id="progress"></div>
+<h1 id="q-title"></h1>
+<p id="q-sub"></p>
+<div id="figure"></div>
+<div id="q-body"></div>
+<p id="q-error" role="alert"></p>
+<div id="q-actions"></div>
+</main>
+<section id="viewer" hidden>
+<div id="canvas-wrap">
+<canvas id="c"></canvas>
+<div id="hero" hidden>
+<h1><span class="nb">間取り図の写真から、</span><span class="nb">家全体を3Dに。</span><br><span class="h1s">家具や床を変えて試せます</span></h1>
+<button id="hero-go">間取り図を選ぶ</button>
+<button id="hero-resume" class="ghost" hidden>続きから（前の保存）</button>
+<a id="hero-demo" class="btn-ghost" href="demo-house/index.html">見本の家で試す（床・壁・キッチン）</a>
+<div class="row"><button id="hero-sample" class="ghost">この見本に家具を置く</button><button id="hero-menu" class="ghost">ほかの始め方・保存</button></div>
+<p class="hero-sample">上の3Dは見本です。画像はこの端末の中だけで使い、外に送りません。</p>
+<p class="author-row"><a class="author" href="https://www.threads.com/@kyoto_nukui" target="_blank" rel="noopener noreferrer">作った人：@kyoto_nukui（Threadsでフォロー）</a></p>
+</div>
+<div id="found" class="found" hidden></div>
+<div id="labels"></div>
+<div id="view-buttons" class="views" role="group" aria-label="表示">
+<label class="vsel"><span>見る場所</span><select id="view-select" aria-label="見る場所を選ぶ"></select></label>
+<button type="button" class="tgl" id="tgl-furn" aria-pressed="true">家具</button>
+<button type="button" class="tgl" id="tgl-dims" data-on="false" aria-label="名前・寸法を出す"><span class="dims-name">名前・</span>寸法を出す</button>
+<button type="button" id="btn-png" aria-label="画像で保存">画像で保存</button>
+</div>
+<div class="nav" role="group" aria-label="操作">
+<button type="button" id="nav-finish" class="nav-finish">床・壁を変える</button>
+<div class="nav-row">
+<button type="button" id="nav-add" class="nav-add">＋家具</button>
+<button type="button" id="nav-big" class="onlysm" aria-pressed="false" aria-label="3Dを大きく">⤢</button>
+<button type="button" data-nav="left" aria-label="左へ回す">⟲</button>
+<button type="button" data-nav="right" aria-label="右へ回す">⟳</button>
+<button type="button" data-nav="in" aria-label="拡大">＋</button>
+<button type="button" data-nav="out" aria-label="縮小">－</button>
+</div>
+</div>
+<div id="turn" class="turn" role="group" aria-label="選んだ家具の向き" hidden>
+<p id="turn-msg" role="status" aria-live="polite"></p>
+<button type="button" id="turn-nudge" class="nudge" hidden>少し離す</button>
+<button type="button" id="turn-left" aria-label="選んだ家具を左に90°回す">⟲ 左に回す</button>
+<button type="button" id="turn-right" aria-label="選んだ家具を右に90°回す">右に回す ⟳</button>
+</div>
+<p id="done-msg" class="done-msg" role="status" aria-live="polite" hidden></p>
+<div id="tapsheet" class="tapsheet" role="dialog" aria-labelledby="ts-title" hidden>
+<div class="ts-head"><b id="ts-title"></b><button type="button" id="ts-close" class="ghost" aria-label="設定を閉じる">✕</button></div>
+<div id="ts-body"></div>
+</div>
+<div class="vhint"><span class="h-mouse">ドラッグで回転・ホイールで拡大・<b>床や家具をクリック</b></span><span class="h-touch">指でなぞって回す・2本指で拡大・<b>押すと変えられます</b></span><span class="h-both">ドラッグか指でなぞって回す・ホイールか2本指で拡大・<b>押すと変えられます</b></span></div>
+</div>
+<div id="sheet">
+<div id="selected"></div>
+<div id="warnings"></div>
+<div id="sheet-actions">
+<button id="btn-add">家具を足す</button>
+<button id="btn-list" class="ghost">寸法の一覧</button>
+<button id="btn-restart" class="ghost">最初から</button>
+</div>
+<div id="save-actions" class="row">
+<button id="btn-export" class="ghost">保存を書き出す</button>
+<button id="btn-import" class="ghost">保存を読み込む</button>
+<button id="btn-clear" class="ghost">保存を消す</button>
+</div>
+<div id="presets" class="presets"></div>
+<p class="hint">保存はこの端末のこのブラウザだけです。しばらく開かないと消えることがあるので、大事なものは「保存を書き出す」でファイルにしてください。</p>
+<p class="hint">家具は指でつかんで動かせます。何もない所を1本指でなぞると回り、2本指で拡大・縮小します。15cm未満のすき間は「壁や家具にくっつけて置いた」とみなし、通り道の警告に入れません。</p>
+</div>
+<section id="plan2d" class="plan2d"><div id="plan"></div></section>
+</section>
+<section id="list" hidden>
+<h1>寸法の一覧</h1>
+<p class="sub"><span class="badge est">目安</span> は「分からない」を選んで標準の値を入れたもの、間取り図から読み取ったもの、見本の値です。押すと測った値に直せます（直すと印が消えます）。</p>
+<div id="list-body"></div>
+<div class="row"><button id="btn-list-close">3Dに戻る</button></div>
+</section>
+<div id="dialog" hidden>
+<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlg-msg">
+<p id="dlg-msg"></p>
+<div class="row" id="dlg-actions"></div>
+</div>
+</div>
+<input type="file" id="file-import" accept="application/json,.json" hidden>
+<input type="file" id="file-plan" accept="image/*" hidden>
+<script src="vendor/three.min.js?v=fdc0e5eb"></script>
+<script src="vendor/OrbitControls.js?v=fdc0e5eb"></script>
+<script src="furniture.js?v=fdc0e5eb"></script>
+<script src="geometry.js?v=fdc0e5eb"></script>
+<script src="floorplan.js?v=fdc0e5eb"></script>
+<script src="render/look.js?v=fdc0e5eb"></script>
+<script src="render/ao.js?v=fdc0e5eb"></script>
+<script src="ocr.js?v=fdc0e5eb"></script>
+<script src="app.js?v=fdc0e5eb"></script>
+<script src="changelog.js?v=fdc0e5eb"></script>
+</body>
+</html>
